@@ -55,8 +55,12 @@ class MyPromise {
                         try {
                             /** 执行时再取值 */
                             let x = func(this[key]);
-                            /** 2.2.7.1 如果 onFulfilled、onRejected 返回一个 x 则执行 [[Resolve]](promise2, x) */
-                            x && MyPromise[Reslove](promise2, x);
+                            /**
+                             * 2.2.7.1 如果 onFulfilled、onRejected 返回一个 x 则执行 [[Resolve]](promise2, x)
+                             * 但是这里全都传入了，包括 onFulfilled 不是 function 时的 reslove 调用 也放在了里面
+                             * 为了复用代码做的小调整，虽然没有严格按照规范...
+                             */
+                            MyPromise[Reslove](promise2, x);
                         } catch(e) {
                             /** 2.2.7.2 */
                             reject(e);
@@ -67,8 +71,9 @@ class MyPromise {
             /**
              * 2.2.7.3 2.2.7.4
              * 统一处理 onFulfilled onRejected 不是 function 的情况 变成调用 promise2 的 resolve reject
+             * reslove 改为 (value: any) => value 交给 [Reslove] 处理，为了处理返回值为 undefinend、null 等情况
              */
-            onFulfilled = onFulfilled instanceof Function ? onFulfilled : resolve;
+            onFulfilled = onFulfilled instanceof Function ? onFulfilled : (value: any) => value;
             onRejected = onRejected instanceof Function ? onRejected : reject;
 
             if (this.state === StatesEnum.pending) {
@@ -102,6 +107,7 @@ class MyPromise {
             promise[reject](reason);
             return reason;
         });
+
         /** 2.3.3 */
         if (Object.prototype.toString.call(x) === '[object Object]' || x instanceof Function) {
             try {
