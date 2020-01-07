@@ -1,0 +1,18 @@
+{
+  "name": "myPromise",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsc -p tsconfig.json && node lib/promise.js",
+    "test": "tsc -p tsconfig.json && promises-aplus-tests test/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^13.1.4",
+    "promises-aplus-tests": "^2.1.2",
+    "typescript": "^3.7.4"
+  }
+}
