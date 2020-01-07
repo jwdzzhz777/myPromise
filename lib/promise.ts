@@ -5,6 +5,14 @@ enum StatesEnum {
 }
 
 type StateType = keyof typeof StatesEnum;
+type onFulfilledType = ((value: any) => any) | null;
+type onRejectedType = onFulfilledType;
+type generatorKey = 'value' | 'reason';
+type generatorFuncition = () => void;
+type generatorType = (func: Exclude<onRejectedType | onFulfilledType, null>, key: generatorKey) => generatorFuncition;
+
+
+
 /// <reference lib="es2019.Symbol" />
 const resolve = Symbol('reslove');
 const reject = Symbol('reject');
@@ -35,9 +43,9 @@ class MyPromise {
      * a.then();
      * ...
      */
-    private onFulfilledQueue: Function[] = [];
-    private onRejectedQueue: Function[] = [];
-    constructor(executor: (...arg: Function[]) => void) {
+    private onFulfilledQueue: generatorFuncition[] = [];
+    private onRejectedQueue: generatorFuncition[] = [];
+    constructor(executor: (...arg: ((value?: any) => any)[]) => void) {
         try {
             executor(this[resolve], this[reject]);
         } catch(e) {
@@ -45,11 +53,11 @@ class MyPromise {
         }
     }
     /** 2.2 一个 promise 必须提供一个 then 方法以访问其当前值、终值和据因。 */
-    then(onFulfilled: Function | null, onRejected?: Function) {
+    then(onFulfilled: onFulfilledType, onRejected: onRejectedType) {
         /** 2.2.7 then 必须返回一个 promise */
         let promise2 = new MyPromise((resolve, reject) => {
             /** 简单封装一下 */
-            let generator = (func: Function, key: 'value' | 'reason'): Function => {
+            let generator: generatorType = (func, key) => {
                 return () => {
                     queueMicrotask(() => {
                         try {
@@ -73,17 +81,17 @@ class MyPromise {
              * 统一处理 onFulfilled onRejected 不是 function 的情况 变成调用 promise2 的 resolve reject
              * reslove 改为 (value: any) => value 交给 [Reslove] 处理，为了处理返回值为 undefinend、null 等情况
              */
-            onFulfilled = onFulfilled instanceof Function ? onFulfilled : (value: any) => value;
-            onRejected = onRejected instanceof Function ? onRejected : reject;
+            let myFulfilled: Exclude<onFulfilledType, null> = onFulfilled instanceof Function ? onFulfilled : (value: any) => value;
+            let myRejected: Exclude<onRejectedType, null> = (onRejected instanceof Function ? onRejected : reject);
 
             if (this.state === StatesEnum.pending) {
-                this.onFulfilledQueue.push(generator(onFulfilled, 'value'));
-                this.onRejectedQueue.push(generator(onRejected, 'reason'));
+                this.onFulfilledQueue.push(generator(myFulfilled, 'value'));
+                this.onRejectedQueue.push(generator(myRejected, 'reason'));
             }
 
-            if (this.state === StatesEnum.fulfilled) generator(onFulfilled, 'value')()
+            if (this.state === StatesEnum.fulfilled) generator(myFulfilled, 'value')()
 
-            if (this.state === StatesEnum.rejected) generator(onRejected as Function, 'reason')();
+            if (this.state === StatesEnum.rejected) generator(myRejected, 'reason')();
         });
 
         return promise2;
@@ -170,7 +178,7 @@ class MyPromise {
         this.onRejectedQueue.forEach(fn => void fn());
     }
     /** catch 就是 then(null, onRejected)的别名 */
-    catch(onRejected: Function) {
+    catch(onRejected: onRejectedType) {
         return this.then(null, onRejected);
     }
     static resolve(value?: any) {
@@ -188,8 +196,6 @@ class MyPromise {
         return 'Promise';
     }
 }
-
-console.log(MyPromise.resolve());
 
 export { MyPromise };
 export default MyPromise;
