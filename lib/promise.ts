@@ -93,7 +93,7 @@ class MyPromise {
         if (promise === x) return promise[reject](new TypeError('不能返回自己'));
 
         /** 2.3.2 如果是promise 则使 promise 接受 x 的状态 直接 .then 接收*/
-        if (x.constructor === MyPromise) x.then((value: any) => {
+        if (Object.prototype.toString.call(x) === '[object Promise]') return x.then((value: any) => {
             promise[resolve](value);
             /** 保持原promise */
             return value;
@@ -109,13 +109,14 @@ class MyPromise {
                 if (then instanceof Function) {
                     /** 2.3.3.3.1 如果 resolvePromise 以值 y 为参数被调用，则运行 [[Resolve]](promise, y) */
                     let resolvePromise = (y: any) => {
-                        !called && this[Reslove](promise, x);
+                        if (called) return;
+                        MyPromise[Reslove](promise, x);
                         called = true;
                         return y;
                     };
                     /** 2.3.3.3.2 如果 rejectPromise 以据因 r 为参数被调用，则以据因 r 拒绝 promise */
                     let rejectPromise = (r: any) => {
-                        !called && promise[reject](r);
+                        promise[reject](r);
                         called = true;
                         return r;
                     };
@@ -163,17 +164,11 @@ class MyPromise {
     }
     static resolve() {}
     static reject(err: any) {}
+    /** 让 toString 得到 [object Promise] */
     get [Symbol.toStringTag]() {
         return 'Promise';
     }
 }
 
-
-let a = new MyPromise((resolve) => {
-    setTimeout(() => {
-        resolve(1123);
-    });
-});
-a.then((x: any) => console.log(x));
 export { MyPromise };
 export default MyPromise;
