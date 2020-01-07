@@ -64,22 +64,21 @@ class MyPromise {
                     });
                 }
             }
+            /**
+             * 2.2.7.3 2.2.7.4
+             * 统一处理 onFulfilled onRejected 不是 function 的情况 变成调用 promise2 的 resolve reject
+             */
+            onFulfilled = onFulfilled instanceof Function ? onFulfilled : resolve;
+            onRejected = onRejected instanceof Function ? onRejected : reject;
+
             if (this.state === StatesEnum.pending) {
-                onFulfilled instanceof Function && this.onFulfilledQueue.push(generator(onFulfilled, 'value'));
-                onRejected instanceof Function && this.onRejectedQueue.push(generator(onRejected, 'reason'));
+                this.onFulfilledQueue.push(generator(onFulfilled, 'value'));
+                this.onRejectedQueue.push(generator(onRejected, 'reason'));
             }
 
-            if (this.state === StatesEnum.fulfilled) {
-                /** 2.2.7.3 如果 onFulfilled 不是函数且 promise1 成功执行， promise2 必须成功执行并返回相同的值 */
-                if (!(onFulfilled instanceof Function)) resolve(this.value);
-                return generator(onFulfilled, 'value')();
-            }
+            if (this.state === StatesEnum.fulfilled) generator(onFulfilled, 'value')()
 
-            if (this.state === StatesEnum.rejected) {
-                /** 2.2.7.4 如果 onRejected 不是函数且 promise1 拒绝执行， promise2 必须拒绝执行并返回相同的据因 */
-                if (!(onRejected instanceof Function)) reject(this.reason);
-                return generator(onRejected as Function, 'reason')();
-            }
+            if (this.state === StatesEnum.rejected) generator(onRejected as Function, 'reason')();
         });
 
         return promise2;
