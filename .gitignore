@@ -15,9 +15,4 @@ npm-error.log
 yarn-debug.log
 yarn-error.log
 
-app/**/*.js
-test/**/*.js
-config/**/*.js
-app/**/*.map
-test/**/*.map
-config/**/*.map
+lib/**/*.js
