@@ -94,7 +94,8 @@ class MyPromise {
 
         /** 2.3.2 如果是promise 则使 promise 接受 x 的状态 直接 .then 接收*/
         if (Object.prototype.toString.call(x) === '[object Promise]') return x.then((value: any) => {
-            promise[resolve](value);
+            /** 这里 value 也有可能都是 promise */
+            MyPromise[Reslove](promise, value);
             /** 保持原promise */
             return value;
         }, (reason: any) => {
@@ -115,6 +116,7 @@ class MyPromise {
                     };
                     /** 2.3.3.3.2 如果 rejectPromise 以据因 r 为参数被调用，则以据因 r 拒绝 promise */
                     let rejectPromise = (r: any) => {
+                        if (called) return;
                         promise[reject](r);
                         called = true;
                         return r;
