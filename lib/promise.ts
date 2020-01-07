@@ -45,7 +45,7 @@ class MyPromise {
         }
     }
     /** 2.2 一个 promise 必须提供一个 then 方法以访问其当前值、终值和据因。 */
-    then(onFulfilled: Function, onRejected?: Function) {
+    then(onFulfilled: Function | null, onRejected?: Function) {
         /** 2.2.7 then 必须返回一个 promise */
         let promise2 = new MyPromise((resolve, reject) => {
             /** 简单封装一下 */
@@ -169,13 +169,27 @@ class MyPromise {
 
         this.onRejectedQueue.forEach(fn => void fn());
     }
-    static resolve() {}
-    static reject(err: any) {}
+    /** catch 就是 then(null, onRejected)的别名 */
+    catch(onRejected: Function) {
+        return this.then(null, onRejected);
+    }
+    static resolve(value?: any) {
+        let promise = new MyPromise((resolve) => { resolve() });
+        MyPromise[Reslove](promise, value);
+        return promise;
+    }
+    static reject(reason: any) {
+        return new MyPromise((resolve, reject) => {
+            reject(reason);
+        });
+    }
     /** 让 toString 得到 [object Promise] */
     get [Symbol.toStringTag]() {
         return 'Promise';
     }
 }
+
+console.log(MyPromise.resolve());
 
 export { MyPromise };
 export default MyPromise;
