@@ -101,16 +101,15 @@ class MyPromise {
             promise[reject](reason);
             return reason;
         });
-
         /** 2.3.3 */
-        if (x instanceof Object || x instanceof Function) {
+        if (Object.prototype.toString.call(x) === '[object Object]' || x instanceof Function) {
             try {
                 let then = x.then;
                 if (then instanceof Function) {
                     /** 2.3.3.3.1 如果 resolvePromise 以值 y 为参数被调用，则运行 [[Resolve]](promise, y) */
                     let resolvePromise = (y: any) => {
                         if (called) return;
-                        MyPromise[Reslove](promise, x);
+                        MyPromise[Reslove](promise, y);
                         called = true;
                         return y;
                     };
