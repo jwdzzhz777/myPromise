@@ -48,11 +48,13 @@ class MyPromise {
     then(onFulfilled: Function, onRejected?: Function) {
         /** 2.2.7 then 必须返回一个 promise */
         let promise2 = new MyPromise((resolve, reject) => {
-            let generator = (func: Function, value: any): Function => {
+            /** 简单封装一下 */
+            let generator = (func: Function, key: 'value' | 'reason'): Function => {
                 return () => {
                     queueMicrotask(() => {
                         try {
-                            let x = func(value);
+                            /** 执行时再取值 */
+                            let x = func(this[key]);
                             /** 2.2.7.1 如果 onFulfilled、onRejected 返回一个 x 则执行 [[Resolve]](promise2, x) */
                             x && MyPromise[Reslove](promise2, x);
                         } catch(e) {
@@ -63,20 +65,20 @@ class MyPromise {
                 }
             }
             if (this.state === StatesEnum.pending) {
-                onFulfilled instanceof Function && this.onFulfilledQueue.push(generator(onFulfilled, this.value));
-                onRejected instanceof Function && this.onRejectedQueue.push(generator(onRejected, this.reason));
+                onFulfilled instanceof Function && this.onFulfilledQueue.push(generator(onFulfilled, 'value'));
+                onRejected instanceof Function && this.onRejectedQueue.push(generator(onRejected, 'reason'));
             }
 
             if (this.state === StatesEnum.fulfilled) {
                 /** 2.2.7.3 如果 onFulfilled 不是函数且 promise1 成功执行， promise2 必须成功执行并返回相同的值 */
                 if (!(onFulfilled instanceof Function)) resolve(this.value);
-                generator(onFulfilled, this.value)();
+                return generator(onFulfilled, 'value')();
             }
 
             if (this.state === StatesEnum.rejected) {
                 /** 2.2.7.4 如果 onRejected 不是函数且 promise1 拒绝执行， promise2 必须拒绝执行并返回相同的据因 */
                 if (!(onRejected instanceof Function)) reject(this.reason);
-                generator(onRejected as Function, this.reason)();
+                return generator(onRejected as Function, 'reason')();
             }
         });
 
@@ -169,7 +171,9 @@ class MyPromise {
 
 
 let a = new MyPromise((resolve) => {
-    resolve(1);
+    setTimeout(() => {
+        resolve(1123);
+    });
 });
 a.then((x: any) => console.log(x));
 export { MyPromise };
