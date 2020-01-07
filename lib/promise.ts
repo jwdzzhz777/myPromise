@@ -11,8 +11,6 @@ type generatorKey = 'value' | 'reason';
 type generatorFuncition = () => void;
 type generatorType = (func: Exclude<onRejectedType | onFulfilledType, null>, key: generatorKey) => generatorFuncition;
 
-
-
 /// <reference lib="es2019.Symbol" />
 const resolve = Symbol('reslove');
 const reject = Symbol('reject');
