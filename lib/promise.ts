@@ -14,7 +14,7 @@ type generatorType = (func: Exclude<onRejectedType | onFulfilledType, null>, key
 /// <reference lib="es2019.Symbol" />
 const resolve = Symbol('reslove');
 const reject = Symbol('reject');
-const Reslove = Symbol('[[Resolve]]');
+const Resolve = Symbol('[[Resolve]]');
 
 class MyPromise {
     /** “value” 是 JavaScript 任意数据类型的值（包括 undefined 、 thenable 或者 promise） */
@@ -66,7 +66,7 @@ class MyPromise {
                              * 但是这里全都传入了，包括 onFulfilled 不是 function 时的 reslove 调用 也放在了里面
                              * 为了复用代码做的小调整，虽然没有严格按照规范...
                              */
-                            MyPromise[Reslove](promise2, x);
+                            MyPromise[Resolve](promise2, x);
                         } catch(e) {
                             /** 2.2.7.2 */
                             reject(e);
@@ -77,7 +77,7 @@ class MyPromise {
             /**
              * 2.2.7.3 2.2.7.4
              * 统一处理 onFulfilled onRejected 不是 function 的情况 变成调用 promise2 的 resolve reject
-             * reslove 改为 (value: any) => value 交给 [Reslove] 处理，为了处理返回值为 undefinend、null 等情况
+             * reslove 改为 (value: any) => value 交给 [Resolve] 处理，为了处理返回值为 undefinend、null 等情况
              */
             let myFulfilled: Exclude<onFulfilledType, null> = onFulfilled instanceof Function ? onFulfilled : (value: any) => value;
             let myRejected: Exclude<onRejectedType, null> = (onRejected instanceof Function ? onRejected : reject);
@@ -98,7 +98,7 @@ class MyPromise {
      * 2.3 promise 解决过程
      * 处理 promise状态
      */
-    static [Reslove](promise: MyPromise, x: any) {
+    static [Resolve](promise: MyPromise, x: any) {
         let called = false; // 防止多次调用
         /** 如果 promise 和 x 指向同一对象，以 TypeError 为据因拒绝执行 promise */
         if (promise === x) return promise[reject](new TypeError('不能返回自己'));
@@ -106,7 +106,7 @@ class MyPromise {
         /** 2.3.2 如果是promise 则使 promise 接受 x 的状态 直接 .then 接收*/
         if (Object.prototype.toString.call(x) === '[object Promise]') return x.then((value: any) => {
             /** 这里 value 也有可能都是 promise */
-            MyPromise[Reslove](promise, value);
+            MyPromise[Resolve](promise, value);
             /** 保持原promise */
             return value;
         }, (reason: any) => {
@@ -122,7 +122,7 @@ class MyPromise {
                     /** 2.3.3.3.1 如果 resolvePromise 以值 y 为参数被调用，则运行 [[Resolve]](promise, y) */
                     let resolvePromise = (y: any) => {
                         if (called) return;
-                        MyPromise[Reslove](promise, y);
+                        MyPromise[Resolve](promise, y);
                         called = true;
                         return y;
                     };
@@ -181,7 +181,7 @@ class MyPromise {
     }
     static resolve(value?: any) {
         let promise = new MyPromise((resolve) => { resolve() });
-        MyPromise[Reslove](promise, value);
+        MyPromise[Resolve](promise, value);
         return promise;
     }
     static reject(reason: any) {
