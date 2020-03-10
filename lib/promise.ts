@@ -51,7 +51,7 @@ class MyPromise {
         }
     }
     /** 2.2 一个 promise 必须提供一个 then 方法以访问其当前值、终值和据因。 */
-    then(onFulfilled: onFulfilledType, onRejected: onRejectedType) {
+    then(onFulfilled: onFulfilledType, onRejected?: onRejectedType) {
         /** 2.2.7 then 必须返回一个 promise */
         let promise2 = new MyPromise((resolve, reject) => {
             /** 简单封装一下 */
@@ -178,6 +178,33 @@ class MyPromise {
     /** catch 就是 then(null, onRejected)的别名 */
     catch(onRejected: onRejectedType) {
         return this.then(null, onRejected);
+    }
+    /** 
+     * 实际上 finally 并不是最后执行，而是不论成功与否都执行
+     * 而且不会阻碍数据的流动
+     * MyPromise.resolve 是考虑到 callback 返回一个promise 的情况， 调用其 [reslove] 处理过程
+     */
+    finally(callBack: any) {
+        return this.then(
+            value => MyPromise.resolve(callBack()).then(() => value),
+            reason => MyPromise.resolve(callBack()).then(() => reason)
+        )
+    }
+    static race(list: MyPromise[]) {
+        return new MyPromise((reslove, reject) => {
+            let done = false;
+            list.forEach((promise: MyPromise) => {
+                promise.then(
+                    res => {
+                        !done && reslove(res);
+                        done = true;
+                    },
+                    reason => {
+                        !done && reject(reason);
+                        done = true;
+                    });
+            });
+        });
     }
     static resolve(value?: any) {
         let promise = new MyPromise((resolve) => { resolve() });
